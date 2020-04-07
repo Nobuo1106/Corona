@@ -13,6 +13,8 @@ struct TimeSeries: Decodable {
     let Japan: [DayData]
 }
 
+
+// for Merge Pull Request
 struct DayData: Decodable, Hashable {
     let date: String
     let confirmed, deaths, recovered: Int
