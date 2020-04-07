@@ -21,12 +21,13 @@ struct DayData: Decodable, Hashable {
 class ChartViewModel: ObservableObject {
     
     @Published var dataSet = [DayData]()
+    var max = 0
     
     init() {
         let urlString = "https://pomber.github.io/covid19/timeseries.json"
         guard let url = URL(string: urlString) else { return }
         URLSession.shared.dataTask(with: url) { (data, resp, err) in
-//            print(data)
+            //            print(data)
             
             guard let data = data else { return }
             do {
@@ -35,6 +36,9 @@ class ChartViewModel: ObservableObject {
                 
                 DispatchQueue.main.async {
                     self.dataSet = timeSeries.Japan
+                    self.max = self.dataSet.max(by: {(day1, day2) -> Bool in
+                        return day2.deaths > day1.deaths
+                        })?.deaths ?? 0
                 }
                 
                 timeSeries.Japan.forEach { (dayData) in
@@ -57,9 +61,15 @@ struct ContentView: View {
             Text("コロナ").font(.system(size: 34, weight: .bold))
             Text("合計死者")
             if !vm.dataSet.isEmpty {
-                HStack {
-                    ForEach(vm.dataSet, id: \.self) { day in
-                        Text(day.date)
+                ScrollView(.horizontal) {
+                    HStack(alignment: .bottom, spacing: 4) {
+                        ForEach(vm.dataSet, id: \.self) { day in
+                            HStack (spacing: 4){
+                                Spacer()
+                                Text(day.date)
+                            }.frame(width: 8, height: (CGFloat(day.deaths) / CGFloat(self.vm.max)) * 200)
+                                .background(Color.red)
+                        }
                     }
                 }
             }
